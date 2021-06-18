@@ -1,0 +1,76 @@
+---
+title: "Homework1"
+author: "Fred LaPolla"
+date: "6/11/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Homework 1
+
+```{r, echo = TRUE}
+
+nyc <- read.csv("https://raw.githubusercontent.com/fredlapolla/RScience2020/master/NYC_HANES_DIAB.csv")
+
+
+  
+```
+
+>- Create a list of numbers 1 to 100 and name this list FirstHundred
+
+```{r}
+
+```
+
+>- On your own, explore nyc and find the median and mean Cadmium levels`
+
+```{r}
+
+```
+
+
+>- Find summary information about the total blood mercury levels in our NYC HANES data (hint: names(nyc) will call the names of each column). What is the max value, what is the minimum value.  
+
+```{r}
+
+```
+
+>- Bonus/Challenge: What is the Standard Deviation and skewness of the blood mercury?
+
+```{r}
+
+```
+
+
+>- Install a package and load, such as "ggplot2" or "dplyr"
+
+```{r}
+
+```
+
+
+>- What is a directory? How can you look up the current directory in which you are working in R?
+
+```{r}
+
+```
+
+
+>- How does one read in a CSV file of data into R?
+
+```{r}
+
+```
+
+>- What two commands are needed to install and use a package in R?
+
+```{r}
+
+```
+
+>- What are reasons one would choose to use R for data analysis?
+
+
