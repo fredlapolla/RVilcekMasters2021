@@ -1,0 +1,352 @@
+---
+title: "BMIN-GA 1005 Programming for Data Analysis: Data Visualization for Presentation"
+author: "Fred LaPolla"
+date: "8/2/2020"
+output: slidy_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+***
+
+## Pulling in the data
+
+```{r}
+library(RCurl)
+url <- getURL("https://raw.githubusercontent.com/fredlapolla/RVilcekMasters2021/master/NYC_HANES_DIAB.csv")
+nyc <- read.csv(text = url)
+nyc$DX_DBTS <- factor(nyc$DX_DBTS, levels = 1:3, labels = c("Diabetes w/ DX", "Diabetes no DX", "No Diabetes"))
+```
+
+***
+
+## Objectives
+
+Students will be able to:
+
+>- Use GGPlot to make publication worthy graphics
+>- Employ GGPlot's layering functionality to customize figures
+>- Use scales and themes to improve layout
+>- Explain considerations for effective data visualization
+
+***
+
+## Visualization for Communication
+
+
+
+### GGPlot2
+
+
+While base plots like those above are fine for data exploration, often we will also need to create figures for a publication. 
+
+A good option is a package called GGPlot2, which stands for Grammar of Graphics (you will never need to know that)
+
+It is part of the tidyverse, so you should actually have it but just in case:
+
+```{r, echo = TRUE}
+#install.packages("ggplot2", repos = "http://cran.us.r-project.org")
+library(ggplot2)
+```
+
+*** 
+
+## GGPlot2
+
+</br>
+</br>
+</br>
+
+GGPlot is very common, so you should learn it, but it is also kind of weird relative to a lot of ways you might normally think about charts. GGPlot works by assigning values to aesthetic components of a chart (think x, y coordinates, colors, shapes etc), and then adds layers of shapes and labels to actually visualize these things. 
+
+This typically requires working in multiple steps. 
+
+## GGPlot2 Step1
+
+first we name the dataset and assign our basic X Y coordinates. Not all charts will have both. Let's start with a basic scatterplot 
+
+```{r, echo = TRUE}
+pic <- ggplot(nyc, aes(x = SPAGE, y = CHOLESTEROLTOTAL))
+pic
+```
+
+When we run this, nothing happens, or seems to happen. 
+
+****
+
+## GGPlot2 Step 2
+
+</br>
+</br>
+</br>
+
+We next need to add a layer that tells R what sort of shape to map those aesthetic attributes onto:
+
+```{r, echo = TRUE}
+pic + geom_point()
+```
+
+***
+
+## Group Work
+
+Try out using GGplot to make a scatter plot of A1C vs Glucose. Remember there will be two parts: where you assign the aes and then where you add a geom
+
+```{r}
+
+```
+
+
+
+***
+
+## A different Geom
+
+We could try a different "geom" but most do not actually make a lot of sense for this combination of variables:
+
+```{r, echo = TRUE}
+pic + geom_smooth()
+```
+
+We can also combine as layers and add a linear estimate with:
+
+```{r}
+pic + geom_point()+ geom_smooth(method = "lm")
+```
+
+
+There is **no need* to memorize these "geoms." Instead go to the Help up on the top menu and open the Cheatsheets. There are many cheatsheets, and they add when you install packages. This is a quick reference guide. 
+
+***
+
+## Group work
+
+Try making the same A1C vs Glucose scatter plot but add in a line estimating linear correlation:
+
+```{r}
+
+```
+
+
+***
+
+## GGPlot 2 Making Histograms and Boxplots
+
+So now if we want to make charts like those above we can:
+
+Histograms
+
+```{r, echo = TRUE}
+ggplot(nyc, aes(x = CHOLESTEROLTOTAL)) +geom_histogram()
+```
+
+***
+
+## Histogram Bins
+
+
+We can also set the width
+
+```{r, echo = TRUE}
+ggplot(nyc, aes(x = CHOLESTEROLTOTAL, )) +geom_histogram(binwidth=5)
+```
+
+```{r}
+ggplot(nyc, aes(x = CHOLESTEROLTOTAL,)) +geom_histogram(binwidth=20)
+
+
+```
+
+
+Or
+
+```{r, echo = TRUE}
+ggplot(nyc, aes(x = as.factor(GENDER), y =CHOLESTEROLTOTAL ))+geom_boxplot()
+```
+
+***
+
+## Group work
+
+Make a histogram of lead levels, experiment with updating the bin width. Make a boxplot of diabetes diagnosis vs glucose level.
+
+```{r}
+
+```
+
+
+***
+
+## Error Bars
+
+We can use a layer called stat_summary to add visualizations that are not derived from raw counts, like mean values or confidence intervals:
+
+```{r}
+ggplot(nyc, aes(x = GENDER, y = CHOLESTEROLTOTAL)) + stat_summary(fun = mean, geom="bar",fill = "white", color = "black") + stat_summary(fun.data = mean_cl_normal, geom = "errorbar", width = .5) 
+```
+
+
+***
+
+## Group Work
+
+Try making an error bar for mean Glucose by diabetes diagnosis
+
+```{r}
+
+```
+
+
+***
+
+## GGPlot for formatting
+
+</br>
+</br>
+</br>
+
+So far we have just found a relatively complex way to make the same plots that hist() and boxplot() made. 
+
+One of the first things we might try is formatting by color. Color could serve two purposes: meaning can be encoded in color or for design. By encoding meaning, I mean that the color tells us information, for example in the heatmap. 
+
+```{r, echo = TRUE}
+ggplot(nyc, aes(x = SPAGE, y = CHOLESTEROLTOTAL, col = as.factor(GENDER)))+geom_point()
+```
+
+***
+
+## Color continued
+
+</br>
+</br>
+</br>
+
+A quirk of ggplot is that colors of points are encoded col, but if you want bars to be filled, you must use fill:
+
+```{r, echo = TRUE}
+ggplot(nyc, aes(x = CHOLESTEROLTOTAL, y = ..count.., fill = GENDER)) +geom_bar(width = 10)
+
+```
+
+*** 
+
+## Color Palettes
+
+</br>
+</br>
+</br>
+
+You can also use color blind friendly palettes, like those offered by the package colorbrewer2
+
+```{r, echo = TRUE}
+install.packages("RColorBrewer", repos = "http://cran.us.r-project.org")
+library(RColorBrewer)
+display.brewer.all(colorblindFriendly = TRUE)
+```
+
+Then:
+
+```{r, echo = TRUE}
+ggplot(nyc, aes(x = CHOLESTEROLTOTAL, y = SPAGE, col = DX_DBTS))+geom_point() + scale_color_brewer(breaks = 3,palette = "Dark2")
+```
+
+***
+
+## Group Work
+
+Explore the palettes on R color brewer. Try changing the color scale on a scatter plot of glucose vs. A1C
+
+```{r}
+
+```
+
+
+***
+
+## Scales
+
+</br>
+</br>
+</br>
+
+We may also want to change up the scales. The plot we just made aonly had tick marks every 100, but that is too large a scale for cholesterol. the seq() command takes in a starting value, a finishing value and a number to count by. 
+
+```{r, echo = TRUE}
+
+ggplot(nyc, aes(x = CHOLESTEROLTOTAL, y = SPAGE, col =DX_DBTS))+geom_point()+ scale_color_brewer(breaks = 3,palette = "Dark2")  + scale_x_continuous(breaks = seq(0, 400, 25))
+```
+
+
+We could do the same for the y scale:
+
+```{r, echo = TRUE}
+ggplot(nyc, aes(x = CHOLESTEROLTOTAL, y = SPAGE, col = DX_DBTS))+geom_point() +scale_color_brewer(breaks = 3,palette = "Dark2") + scale_x_continuous(breaks = seq(0, 400, 25))+scale_y_continuous(breaks = seq(0, 100, 5))
+```
+
+***
+
+## Labels
+
+</br>
+</br>
+</br>
+
+We can also relabel the labels to make it more presentable for a paper, poster or talk. Perhaps you are noticing a trend that at first seems strange in ggplot but makes life easier: we keep making changes by adding arguments on to the end. This means once you get your baseline plot drawn you can then experiment on customizing for publication. 
+
+```{r, echo = TRUE}
+ggplot(nyc, aes(x = CHOLESTEROLTOTAL, y = SPAGE, col = DX_DBTS))+geom_point() +scale_color_brewer(breaks = 3,palette = "Dark2") + scale_x_continuous(breaks = seq(0, 400, 25))+scale_y_continuous(breaks = seq(0, 100, 5)) + xlab("Total Cholesterol Level mg/dL") + ylab("Age in years")
+
+```
+
+***
+
+## Themes
+
+</br>
+</br>
+</br>
+
+We can also customize the overall "look" of the chart with a theme. As you start adding "theme_" R will suggest options, try them out to see which you like. The second theme argument removes a redundant label on the legend. 
+
+
+
+```{r, echo = TRUE}
+ggplot(nyc, aes(x = CHOLESTEROLTOTAL, y = SPAGE, col = DX_DBTS))+geom_point()+scale_color_brewer(breaks = 3,palette = "Dark2")  + scale_x_continuous(breaks = seq(0, 400, 25))+scale_y_continuous(breaks = seq(0, 100, 5)) + xlab("Total Cholesterol Level mg/dL") + ylab("Age in years") + theme_minimal() + theme(legend.title = element_blank()) 
+
+```
+
+***
+
+## Group work
+
+Try adjusting the X and Y scales to be in increments of 50 for glucose, 2 for A1C in your scatter plot of A1C vs Glucose. Change the theme (background), update the X and Y labels to say "A1C level" and "Glucose level".
+
+```{r}
+
+```
+
+
+
+***
+
+## Things to consider when choosing colors and themes
+
+</br>
+</br>
+</br>
+
+>- Accessibility (color blind friendly palettes can help).
+>- Where will this be seen? Large rooms like conference plenaries, might benefit from a dark background with light points, bright rooms with slide projectors will benefit from light backgrounds and dark points. 
+>- Posters assume that readers have limited time and need a simple message.
+>- In journal papers provide enough information that a user can understand without flipping to additional information. 
+>- Avoid gimmicks like 3D designs. 
+
+
+
+ 
+
+
+
+
