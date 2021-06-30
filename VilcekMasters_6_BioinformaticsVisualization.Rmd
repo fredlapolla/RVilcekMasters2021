@@ -1,0 +1,203 @@
+---
+title: "BMIN-GA 1005 Programming for Data Analysis: Bioinformatics Visualization"
+author: "Fred LaPolla"
+date: "7/29/2021"
+output: slidy_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Heatmaps
+
+In looking at gene expression data you may want to see a heatmap to see which timepoints/genes are being expressed. A heatmap is a quick way to look at large volumes of data by highlighting cells that have higher or lower values in them. 
+
+```{r, echo = TRUE}
+dolgalevNormRNA <- read.csv("https://raw.githubusercontent.com/fredlapolla/RVilcekMasters2021/main/counts.normalized.csv")
+
+```
+
+
+***
+
+## Checking our data
+
+This data provided by Dr. Dolgalev is a table of RNA-seq normalized counts. These are expression values of all genes across different samples. There are wild-type and Tet2-knockout samples (4 of each).
+ 
+For more details on how the table was generated, the steps are summarized here:
+http://bit.ly/snsdemo
+
+```{r, echo = TRUE}
+head(dolgalevNormRNA)
+class(dolgalevNormRNA)
+
+```
+
+We can see column 1 is the gene name, column 2, 3 and 8 and 9 are the Wild Type samples, and columns 4:7 are the knock out samples. 
+
+***
+
+## Reordering to group by type
+
+```{r}
+dolgalevNormRNA<- dolgalevNormRNA[c(1:3,8:9, 4:7)]
+head(dolgalevNormRNA)
+dolgaMat <- as.matrix(dolgalevNormRNA[,2:9], "numeric")
+rownames(dolgaMat)<- dolgalevNormRNA[,1]
+head(dolgaMat)
+class(dolgaMat)
+class(dolgaMat[,1])
+summary(dolgaMat)
+```
+
+
+***
+## Creating a heatmap of KnockOut vs Wild Type
+
+```{r}
+knockOut <- dolgaMat[,5:8]
+wildType <- dolgaMat[,1:4]
+
+exp_genesAll <- names(which(rowSums(dolgaMat)>15000))
+
+exp_genesKO <- names(which(rowSums(knockOut)>15000))
+ 
+exp_genesWT <- names(which(rowSums(wildType)>15000))
+
+dolgaExp <- dolgaMat[exp_genesAll,]
+expressedKO <- knockOut[exp_genesKO,]
+expressedWT <- wildType[exp_genesWT,]
+```
+
+
+***
+
+## Group Work
+
+Convert the following data into a matrix, with rownames for the genes being named. Re-order the columns to group WT and KO mice strains together. Make subsets of highly expressed genes (choose your own threshold) 
+
+```{r, echo = TRUE}
+dolgalevNormRNA <- read.csv("https://raw.githubusercontent.com/fredlapolla/RVilcekMasters2021/main/counts.normalized.csv")
+```
+
+***
+
+
+```{r}
+
+
+#if (!requireNamespace("BiocManager", quietly = TRUE))
+#    install.packages("BiocManager")
+#BiocManager::install("ComplexHeatmap")
+
+library(ComplexHeatmap)
+Heatmap(dolgaExp)
+Heatmap(expressedKO)
+Heatmap(expressedWT)
+```
+
+```{r}
+Heatmap(dolgaExp, cluster_columns = FALSE, clustering_method_rows = "complete", show_row_names = FALSE)
+Heatmap(expressedKO, cluster_columns = FALSE, clustering_method_rows = "complete", show_row_names = FALSE)
+Heatmap(expressedWT, cluster_columns = FALSE, clustering_method_rows = "complete", show_row_names = FALSE)
+```
+
+***
+
+## Group Work
+
+Try making a heatmap of the data you subsetted in part 1. Try both clustering by column and setting this setting to false. Explore the help information and see what other row clustering methods are available
+
+
+```{r}
+
+```
+
+***
+
+## Clustering a pairwise correlation of expressions:
+
+We might look at a heatmap of the highly expressed genes. Explore cor() in RStudio, what does this command do? What is t()? Why are we taking the t() of our matrix?  
+
+```{r}
+
+Heatmap(cor(t(dolgaExp)), show_column_names = FALSE, show_row_names = FALSE)
+```
+
+Then we can take this figure, and using a command called hclust, we can pass a method we want the clustering to be done. dist means it is creating a "distance matrix" of the correlations of gene expression, which is a way of saying if we were to chart the values, how far would each be from one another. You can explor ways you can cluster by viewing ?dist. Then this 
+
+```{r}
+##The following is borrowed from Dr. Itai Yannai
+
+##A correlation of the highly expressed genes in our set
+C = cor(t(dolgaExp))
+#then it becomes a heatmap
+h <- Heatmap(C)
+print(h)
+
+## We cluster the values in this set of gene expression using euclidian distance
+## Basically on the backend, R is making a matrix of the values in C and then calculating
+##How far they are from one another
+h <- hclust(d=dist(C))
+
+## Then we are choosing where to cut the dendrogram, here 6 "branches" or groups have
+## been cut, you could also choose to cut the dendrogram by height using h instead of K
+hc <- as.factor(cutree(h, k=6))
+## Now we make a heatmap again using the order of the clustering
+hh = ComplexHeatmap::Heatmap(C[h$order, h$order],cluster_rows=FALSE, cluster_columns=FALSE)
+## Finally we add annotations to show the groups that we have made
+an = HeatmapAnnotation(df = data.frame(hc[h$order]), which = 'row')
+print(hh+an)
+
+```
+
+
+*** 
+
+
+## Other transformations we might consider 
+
+We can see that our data is highly skewed so we may want to perform this on a log scale:
+
+```{r}
+Heatmap(log10(1+dolgaExp))
+```
+
+
+
+We can also use several methods of hierarchical clustering in our chart. To learn more about these try: ?hclust  
+
+```{r}
+Heatmap(C, clustering_method_rows = "complete", cluster_columns = FALSE )
+```
+
+
+
+***
+
+
+
+```{r}
+install.packages("RColorBrewer", repos = "http://cran.us.r-project.org")
+library(RColorBrewer)
+Heatmap(C, col = brewer.pal(7,"BuGn"))
+```
+
+***
+## Group work
+
+Explore the R Color Brewer Palettes and try a different coloration for a heatmap. 
+
+***
+
+## Unsupervised Clustering
+
+You can also use a command kmeans() for unsupervised clustering:
+
+```{r}
+kRes <- kmeans(t(C),  10)
+hist(kRes$cluster)
+```
+
