@@ -1,0 +1,321 @@
+---
+title: "Hypothesis Testing"
+author: "Fred LaPolla"
+date: "8/5/2020"
+output: slidy_presentation
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Hypothesis Testing
+
+Tests to see if differences appear in groups we are analyzing. 
+
+Typically we want to see if the null hypothesis is true or can be rejected. 
+
+Results are termed in rejection of the null or failure to reject the null. 
+
+```{r}
+nyc <-read.csv("https://raw.githubusercontent.com/fredlapolla/RVilcekMasters2021/main/NYC_HANES_DIAB.csv")
+
+nyc$AGEGROUP <- factor(nyc$AGEGROUP, levels = 1:3, labels = c("Youngest", "Middle", "Aged"))
+nyc$GENDER <- factor(nyc$GENDER, levels = 1:2, labels = c("male", "female"))
+# Rename the HSQ_1 factor for identification
+  nyc$HSQ_1 <- factor(nyc$HSQ_1, levels = 1:5, labels=c("Excellent","Very Good","Good", "Fair", "Poor"))
+  # Rename the DX_DBTS as a factor
+  nyc$DX_DBTS <- factor(nyc$DX_DBTS,levels = 1:3, labels=c("Diabetes with DX","Diabetes with no DX","No Diabetes"))
+  
+
+
+```
+
+
+***
+
+## P Values
+
+Important to note that a P value is just the odds of finding a result as "far" from the mean of the control group assuming the null hypothesis was true. So .05 means that only 5% of the time we would assume a result as far from the control group's mean assuming there is no difference. 
+
+This is important because in data like RNA Seq Analysis, we may have 1000s of rows, simply see which results are significant at .05 is **Not** going to be meaningful. 
+
+**Remember** a P value < .05, does not mean either that your finding is "true" and it definitely does not mean it is biologically or scientifically significant.
+
+A p value should be only one part of a broader context, including confidence intervals and honest assessment of how likely the findings were in the first place.
+
+There is an on-going push among statisticians to de-emphasize the p value. 
+
+If you have a very small p in r, you get a value like "p-value < 2.2e-16" but for publishing you should write something like "p < .001"
+
+
+
+
+***
+
+## Contingency tables and Chi Squared X^2
+
+Used for assessing if the proportions of of nominal (factor) variables are what we would expect if the groups were equal of not.
+
+Chi square assumes > 5 observations per cell. Null hypothesis is that rows and columns are independent. 
+
+```{r}
+chisq.test(nyc$AGEGROUP, nyc$DX_DBTS)
+```
+
+We can get the effect size by taking the square root of (X^2/n*degrees of freedom), which is called Cranmer's V. 
+
+
+***
+
+## Adding contingency tables
+
+Typically we will also want to see the actual tables. Creating a table will show us the total nubers, prop.table will tell us the percentage by either row (setting the margin to 1) or column (setting the margin to 2)
+
+```{r}
+AgeDxTable <- table(nyc$AGEGROUP, nyc$DX_DBTS)
+AgeDxTable
+ # Proportions of Age by DX per row
+ prop.table(AgeDxTable, 1)
+ # Proportions of Age by DX per column
+ prop.table(AgeDxTable, 2)
+chisq.test(nyc$AGEGROUP, nyc$DX_DBTS)
+```
+
+## Contingency test with small values
+
+For small n (less than 5 observations in a cell), the test for fisher's exact test is:
+
+fisher.test()
+
+
+*** 
+
+## On your own
+
+Make a contingency table of HSQ1 vs a dichotomized Has or does not have diabetes. Run a chi square test and look up the Cranmer's V (square-root of X square divided by n * df). We can then look up online a table to see if this is a small, moderate or large effect. 
+
+```{r}
+
+```
+
+
+
+
+***
+
+## Parametric Tests
+
+Parametric tests assume normality of our data. 
+
+We can visually assess this with histograms. We can also use the Sharpiro-Wilk test that comes in pastecs::stat.desc(norm = TRUE) to see a p value for if the data is normal
+
+```{r}
+library(pastecs)
+stat.desc(nyc$UCREATININE, norm = TRUE)
+```
+
+We can also run this test on its own:
+
+```{r}
+shapiro.test(nyc$CHOLESTEROLTOTAL)
+```
+
+
+The normtest.p test tells us if data is likely to differ significantly from a normal distribution. p < .05 means it is not normally distributed, but a caveat is that very large sets of data will often have a "significant" p value since they are powered to detect very small differences. 
+
+We can also run the Kolmogorov-Smirnov Test:
+
+```{r}
+ks.test(nyc$CHOLESTEROLTOTAL, pnorm, mean(nyc$CHOLESTEROLTOTAL, na.rm = TRUE), sd(nyc$CHOLESTEROLTOTAL, na.rm = TRUE))
+```
+
+
+***
+
+## Homogenity of Variance
+
+We also want to test the assumption of homogeneity of variance. This basically means that at all levels going up of a variable, the amount of variation remains consistently the same. For example, we would want to know if the amount of variation in, say, cholesterol, was similar in diabetics and non-diabetics to compare. We can test this with a command called
+
+leveneTest(VariableOfInterest, groups, center = median/mean)
+
+```{r}
+library(car)
+leveneTest(nyc$CHOLESTEROLTOTAL, nyc$GENDER, center = mean)
+```
+
+Like with the Shapiro-Wilk, a significant p < .05 means this does not match the assumption of equality of variance. 
+
+***
+
+## T Test
+
+T Test is used for comparing the means between two normally distributed groups. The null hypothesis says there is no difference between means of the groups. 
+
+First we will review assessing normality. 
+
+```{r, echo = TRUE}
+par(mfrow = c(1,2))
+library(psych)
+library(dplyr)
+by( nyc$CHOLESTEROLTOTAL,nyc$GENDER, hist)
+psych::describe(nyc$CHOLESTEROLTOTAL)
+femChol <- nyc %>% filter(GENDER == "female") 
+maleChol <- nyc %>% filter(GENDER == "male")
+psych::describe(femChol$CHOLESTEROLTOTAL)
+psych::describe(maleChol$CHOLESTEROLTOTAL)
+
+## close enough for the demo
+```
+
+***
+
+## T-Tests
+
+Now to actually do the T-Test: t.test compares the means. If we are comparing two objects, such as two columns, the notation is t.test(varA **,** VarB). If we are comparing some column by some variable (like cholesterol by sex) we would use the tilde: 
+
+```{r}
+t.test(nyc$CHOLESTEROLTOTAL ~ nyc$GENDER)
+```
+
+In R, if you set var.equal = FALSE, R automatically checks the variances to see if they are equal and "decides" to run the student vs Welch test based on if they are equal or not, so you can leave as False. 
+
+
+```{r}
+t.test(femChol$CHOLESTEROLTOTAL, maleChol$CHOLESTEROLTOTAL, paired = FALSE, alternative = "two.sided", conf.level = 0.95, var.equal = FALSE)
+```
+
+Things to note, paired is set to false. Paired would mean they were the same people/subjects. So for example if we weighed people at the start of a test, then put them on a diet and weighed at the end, that would be paired. Here the male and female groups are totally separate people. 
+
+The tails "alternative" is two.sided. It could be lesser or greater if we were doing a single tailed test, but this is less common. 
+
+We also set variance as equal because the variances were close. A more conservative approach would be to set as false. 
+
+
+***
+
+## On Your Own
+
+Try comparing mean LDL by if a person has diabetes or not. To do this you will need to:
+
+1) Collapse Diabetes into two groups
+2) Check that LDL Estimate appears normally distributed
+3) Run a T Test. 
+
+***
+
+## Non-Parametric Tests for Comparing Medians
+
+### Mann-Whitney (unpaired) and Wilcoxon (paired)
+
+If we have a small sample under 30 (which in this case we have a large sample) and non-normally distributed data we may need to choose a non-parametric test. 
+
+**Confusing note:** Both of these are called wilcox.test() in R, and we then set an argument to be paired = TRUE or FALSE. 
+
+Remember paired means they are the same subjects before and after, unpaired means they are separate. 
+
+Also non-parametric means not normally distributed. Outliers will throw off t-tests and parametric tests. 
+
+```{r}
+## Because paired = False, technically this is a Mann-Whitney test
+wilcox.test( nyc$COTININE ~ nyc$GENDER, paired = FALSE)
+```
+
+If these were before and after data, we could perform the Wilcoxon test by setting paired = TRUE. 
+
+
+***
+
+## On Your Own
+
+Try comparing the means of A1C in diabetics to non-diabetics. What command will you use, and which arguments will it take?
+
+```{r}
+
+```
+
+
+*** 
+
+## Correlations
+
+### Pearson' R (parametric), Spearman Rho (non-parametric), Kendall's Tau (non-parametric)
+
+There are several options: cor(), cor.test() and rcorr(). Cor does not provide a confidence interval or P Value, but can do multiple correlations. Rcorr() requires a matrix and does not calculte Kendall's Tau. 
+
+Note here we are doing cor.test(), but when we made heatmaps we did just cor(). The difference is cor.test provides the 95% confidence intervals and a p value, as well as the pearson's R or spearman's Rho, where cor just provides R/Rho. 
+
+```{r}
+cor.test(nyc$CHOLESTEROLTOTAL, nyc$SPAGE, method = "pearson")
+```
+
+
+We can then square the R result. This gives us an estimate of how much the variability in the outcome is shared by the other correlating variable. This is often expressed as how much variation is accounted for by the other variable. 
+
+***
+
+## Non-Parametric: Spearman's Rho
+
+```{r}
+cor.test(nyc$GLUCOSE, nyc$A1C, method = "spearman")
+```
+
+***
+
+## Non-Parametric: Kendall's Tau
+
+Kendall's Tau is more appropriate for smaller data
+
+***
+
+## On Your Own
+
+Run a correlation of lead to to total mercury. Which test will you choose and why? What results do you get?
+
+```{r}
+
+```
+
+
+***
+
+## Analysis of Variance ANOVA
+
+A test that assumes normal distribution for assessing difference in means when you have multiple groups. There are multiple ways to do this, and one is to run aov() which does a linear regression on the back end. The result of this then should be summarized or run through ANOVA. 
+
+```{r}
+CholDiabAnova <- aov(nyc$CHOLESTEROLTOTAL ~  nyc$DX_DBTS)
+summary(CholDiabAnova)
+anova(CholDiabAnova)
+
+```
+
+We often may want to adjust the p value if we have multiple p values. We can use p.adjust and set the method, for example "bonferroni" and "fdr"
+
+```{r}
+p.adjust(.418, method="bonferroni", 3)
+p.adjust(.418, method = "fdr", 3)
+```
+
+***
+
+
+
+## Power Assessment
+
+Assessing power will help readers of your research to know the likelihood of type II error (saying there is not a difference when in fact one exists). Underpowered studies are a major problem in pre-clinical research that limit the replicability of findings. It is best to be transparent about providing a power calculation so that readers will know if results need to be confirmed with larger studies. 
+
+Check out the information provided by Stat Methods on using the pwr package for power tests for different common hypothesis tests: https://www.statmethods.net/stats/power.html
+
+
+```{r}
+library(pwr)       
+pwr.t.test(n=450  , d =0.1194496 , sig.level =0.05, type = "two.sample", alternative=("two.sided"))
+        
+pwr.t.test( d = 0.1194496 , sig.level = 0.05, power = 0.8, type = "two.sample", alternative=("two.sided"))
+```
+
+
+
+
+
