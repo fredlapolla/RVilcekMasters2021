@@ -1,5 +1,5 @@
 ---
-title: "Hypothesis Testing"
+title: "BMIN-GA 1005 Programming for Data Analysis:Hypothesis Testing"
 author: "Fred LaPolla"
 date: "8/5/2020"
 output: slidy_presentation

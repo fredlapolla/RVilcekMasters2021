@@ -1,0 +1,285 @@
+---
+title: "BMIN-GA 1005 Programming for Data Analysis: Linear and Logistic Regression"
+author: "Fred LaPolla"
+date: "8/9/2020"
+output: slidy_presentation
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+***
+
+```{r}
+nyc <-read.csv("https://raw.githubusercontent.com/fredlapolla/RVilcekMasters2021/main/NYC_HANES_DIAB.csv")
+
+nyc <- na.omit(nyc)
+nyc$AGEGROUP <- factor(nyc$AGEGROUP, levels = 1:3, labels = c("Youngest", "Middle", "Aged"))
+nyc$GENDER <- factor(nyc$GENDER, levels = 1:2, labels = c("male", "female"))
+# Rename the HSQ_1 factor for identification
+  nyc$HSQ_1 <- factor(nyc$HSQ_1, levels = 1:5, labels=c("Excellent","Very Good","Good", "Fair", "Poor"))
+  # Rename the DX_DBTS as a factor
+  nyc$DX_DBTS <- factor(nyc$DX_DBTS,levels = 1:3, labels=c("Diabetes with DX","Diabetes with no DX","No Diabetes"))
+nyc$DiabetesDichotomy <- ifelse(nyc$DX_DBTS == "No Diabetes", 0, 1)
+  nyc$DiabetesDichotomy<- factor(nyc$DiabetesDichotomy)
+```
+
+***
+
+## Inferential Statistics and Regression Analysis
+
+A common approach to analysis is to create a model intended to "predict" expected relationships in our data. 
+
+
+***
+
+## Linear Regression
+
+A linear regression model is a technique that seeks to examine for a continuous outcome or dependent variable of interest.
+
+Last week we discussed the  aov() command, which is calling a lm() command for linear model fitting on the back end. We can also write in our own linear model. 
+
+You may recall that when we learned about correlations, we could see if LEAD correlated to COTININE. We can write this as a linear model:
+
+```{r}
+leadMod <- lm(LEAD ~ COTININE, data = nyc, na.action = na.omit)
+```
+
+Then we summarize our model:
+
+```{r}
+summary(leadMod)
+```
+
+***
+
+## Interpretation
+
+```{r}
+summary(leadMod)
+```
+
+Starting at the bottom, the F statistic is a ratio of the amount of predictive power of the model vs the variation not accounted for by the model. Greater than 1 is indicative that your model is better than no model, and the p value indicates how likely it is that we would get an F value of this size if there was no difference between our model and a comparison with just a mean value (the null hypothesis). 
+
+R^2 tells us how much variation is accounted for by the model. Here we get about 3.3%. The adjusted R^2 uses an equation called Wherry's Model to attempt to predict the R^2 for the total population. 
+
+The table above tells us the coefficients (elsewhere called Beta $\beta ).$ A positive value tells us as the independent value goes up by one, we would expect the outcome variable to go up by that rows $\beta ,$ and a negative value would mean as the predictor goes up by 1, the outcome decreases by $\beta .$ The T statistic is a ratio of the coefficient divided by standard error, this is used in calculating the p value gives an estimate of how large the coefficient is likely to be relative to chance. 
+
+***
+
+## Assumptions
+
+Linear regression assumes:
+
+>- We are working with continuous numbers or with categories of two groups. 
+>- The outcome is continuous
+>- Non-zero variance 
+>- Non-perfect collinearity 
+>- Homoscedasticity: the variance of the residuals (the error in the model) is consistent at all levels
+>- External variables do not correlate with predictors
+>- Independent errors
+>- Normally distributed errors
+>- Independence of predictors (the predictors are all different things)
+>- Linearity - The relationship between independent variables and dependent variable can be described as a line
+
+***
+
+
+## Multiple Regression
+
+So far we have essentially done a correlation of two variables. The strength of regression is that we can use multiple variables. The variables that we examine in our model should have a theoretical basis for including and should be ordered based on the order that you have reason to believe they will have more or less impact on the outcome variable.
+
+The format will be:
+
+lm(DependentVariable(outcomeOfInterest) ~ Independent Var 1 + Independent Var 2, dataset)
+
+If we wanted to add an interaction variable, it would be + Independent Var 1: Independent Var 2 on the end.
+
+
+
+```{r}
+
+##what lm() looks like
+glucoseModel <- lm(GLUCOSE ~ A1C + SPAGE + GENDER, nyc)
+summary(glucoseModel)
+```
+
+So we can see above: residuals or error of points in our model. We could plot and see that these are not normally distributed and that the assumptions of the linear model are not being met. 
+
+Next we see a table of Coefficients, basically the amount that an increase of one (or change of status in the case of DX_DBTS) contributes to a change in glucose levels. The standard error of those estimated coefficients is next, followed by a t statistic or how many standard deviations our coefficient is from a mean of zero. Finally the p value with stars if it is "significant." 
+
+Going down: residual error, basically how much variability would remain from our model to points in our data. This asses how well our model fits the observations. 
+
+R^2 predicts what amount of variability is accounted for by the model. Finally the F statistic is used to estimate if the variables are related. 
+
+So while this specific model does not meet the assumptions of a linear regression, this is how you would actually build one in R. 
+
+***
+
+## Confidence Intervals
+
+We can also get the confidence intervals of each coefficient by running
+
+```{r}
+confint(glucoseModel)
+```
+
+
+***
+
+## Comparing Models
+
+We can put two models in an ANOVA command to compare and see if one offers significant improvement by comparing the F statistic. 
+
+We can also use a command AIC, which stands for the Akaike Information Criteria. It is a relative value, which if a higher value is given in comparing a model to another value, it is a worse fit
+
+```{r}
+glucoseModel2 <- lm(GLUCOSE ~ DiabetesDichotomy + SPAGE + GENDER + COTININE, nyc)
+AIC(glucoseModel, glucoseModel2)
+```
+
+So here we can see it is a slightly worse fit.
+
+***
+
+## Ways to check outliers
+
+We may have individual cases swaying our results. We could assess these by looking at standardized residuals, which create a z score of our residuals, meaning only 5% should be greater than 2 or less than -2
+
+```{r}
+#rstandard(leadMod) would produce a list of all standardized residuals
+
+length(which(rstandard(glucoseModel) > 2 | rstandard(glucoseModel) < -2))/length(leadMod$residuals) *100
+```
+
+Similarly, we can run a command called cooks.distance, which if greater than one indicates a case we should investigate further:
+
+```{r}
+which(cooks.distance(glucoseModel)>10)
+```
+
+
+
+Because there are no larger values, it seems that we might conclude individual outliers are not creating a large influence on our data.
+
+***
+
+## Collinearity
+
+Perfect collinearity would make it impossible to calculate acurate coefficients and creates problems in our model. We can assess with a command car::vif()
+
+```{r}
+library(car)
+vif(glucoseModel)
+```
+ 
+If our values were greater than 10 we should examine these variables in our model. 
+
+***
+
+## Assessing normal distribution of residuals
+
+We have already learned a few ways to visualize the distribution of our data. Conveniently if we run plot on a model, we get four charts
+
+```{r}
+plot(glucoseModel)
+```
+
+Ideally our residuals vs. fitted should be more randomly distributed around the line, so our residual likely do not meet our assumptions. Here we are likely violating homogenaity of variance, and possibly of linearity. The third plot shows heteroscedasticity.  When we look at the QQ Plot, we also see that the residuals do not appear normal. 
+
+We could also save standardized residuals and make a histogram:
+
+```{r}
+nyc$GlucoseStudentizedResid <- rstudent(glucoseModel)
+hist(nyc$GlucoseStudentizedResid)
+```
+
+
+***
+
+## Factors with more than two levels
+
+To include a factor with more than two levels, we must add in dummy variables, basically to say if a given category is true then it gets a 1 and all others get a zero. So for example HSQ_1 has five categories: Excellent, Very Good, Good, Fair, Poor. We want to change this so that in our model if a given value is true, for example excellent, we assign it a 1 and all others a zero. This makes it easier to include in our model as otherwise the coefficient would be multiplied by 2 or 3 or 4 which would not work as well. To do this we assign contrasts to a variable:
+
+```{r}
+contrasts(nyc$HSQ_1)<- contr.treatment(5, base = 5)
+```
+
+Then as a random example:
+
+```{r}
+randomMod <- lm(GLUCOSE ~ HSQ_1, data = nyc, na.action = na.omit)
+summary(randomMod)
+contrasts(nyc$HSQ_1)
+```
+
+***
+
+## On your own
+
+Try making a linear regression to see if there is a linear correlation with Lead as the outcome if predicted by Glucose, Age, LDL and HSQ_1 score (please note this is just an example, in real life your independent variables should have a theoretical reason for inclusion). Try a model with all the variable included and try removing variables and use the AIC to compare them. Make a plot() of your model to assess if it appears to meet the assumptions of a linear model. 
+
+```{r}
+
+```
+
+
+
+***
+
+
+
+## Logistic Regression
+
+When we have a binary outcome, we cannot use linear regression, and instead use logistic regression.  Logistic regression finds the Log Odds of an outcome (for example diabetes or not) given the log slope of the predictor variables. In practice in R, this is easy to compute if we have done linear regression.
+
+Now we use a command called glm, or general linear model, with the family set to binomia. We could also use glm and set the family to "gaussian" for a linear model
+
+```{r}
+fit <- glm(DiabetesDichotomy ~SPAGE + GENDER + UACR,data=nyc,family="binomial")
+
+summary(fit)
+```
+
+To view an odds ratio of each predictor and the confidence interval. A confidence interval that crosses 1 is not "significant" as it means it could raise or lower the odds. 
+
+```{r}
+oddsRatio <- exp(fit$coefficients)
+oddsRatio
+exp(confint(fit))
+```
+
+Also notice that for the results, R has assigned female as the reference variable, we could change this by using a relevel() command and including an argument "ref =" to reassign this. 
+
+
+In logistic regression, rather than r^2 we receive deviance or -2LL, in which the LL is the log-likelihood, a measure of how much of our variation is accounted for by the model vs by variation left out of the model. Here we have a residual deviance smaller than the null deviance, indicating that the model is better than just the intercept. 
+
+There is no exact analogue to R^2 but we can calculate some options such as the Cox and Snell's R^2cs or Nagelkerke's R^2n
+
+Cox and Snell:
+
+```{r}
+#note the denominator is n
+R.cs <- 1-exp((fit$deviance-fit$null.deviance)/1112)
+R.cs
+```
+
+Nagelkerke
+
+```{r}
+R.n <- R.cs/(1-(exp(-fit$null.deviance/1112)))
+R.n
+```
+
+***
+
+## On Your Own
+
+Try out running a basic logistic regression with DiabetesDichotomy as an outcome variable and A1C as the independent variables. Find the odds ratio of the coefficients. Find the confidence intervals of these odd ratios.
+
+```{r}
+
+```
+
+
