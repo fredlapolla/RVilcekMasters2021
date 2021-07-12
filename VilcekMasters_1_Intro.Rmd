@@ -14,6 +14,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Making changes for demo
 
+An additional change
+
 *** 
 
 # R Learning Outcomes
