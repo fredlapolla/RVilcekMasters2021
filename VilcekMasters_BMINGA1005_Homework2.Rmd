@@ -1,0 +1,155 @@
+---
+title: "Masters Homework 2"
+author: "YOUR NAME HERE"
+date: "7/22/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Homework
+
+>- When you read in a .csv file into R, what class is the object that you read in (like nyc)?
+
+
+
+>- What command can you use to determine what type of data is in a column?
+
+```{r}
+
+```
+
+
+>- Provide a command to find the type of data in the DX_DBTS column of nyc. 
+
+```{r}
+
+```
+
+
+>- Provide the same command the type of data but use the other way of indexing from what you did above. 
+
+```{r}
+
+```
+
+
+
+>- What would happen if we had chosen the first 4 columns of NYC HANES and made a matrix? What would the class of the cells in this matrix be? Why?
+
+```{r}
+
+```
+
+
+>- If we make a vector,vec<- c(3,9,4,7,8,9), and multiply it by WannaMatrix, what is the value in the third row, third column? 
+
+```{r}
+WannaMatrix <- nyc[5:10, 6:9]
+WannaMatrix <- as.matrix(WannaMatrix,nrow = 6, ncol = 4)
+
+
+
+```
+
+
+
+>- What happens if instead we made a vector vec2 <- c(3,9,4,7,8) and multiply it by WannaMatrix, what is the third row, third column value? What is going on? 
+
+```{r}
+
+```
+
+
+>- Look up the arguments for read.csv
+
+```{r}
+
+```
+
+
+>- Use apply() to find the median value of CADMIUM, LEAD, MERCURY TOTAL, HDL, CHOLESTEROLTOTAL, GLUCOSESI, CREATININESI, and CREATININE. The values should be:
+
+ CADMIUM              LEAD 
+           0.2936            1.0576 
+MERCURYTOTALBLOOD               HDL 
+           1.6044           55.0000 
+ CHOLESTEROLTOTAL         GLUCOSESI 
+         183.0000            4.8800 
+     CREATININESI        CREATININE 
+          70.7200            0.8000
+
+```{r}
+
+```
+
+
+>- Do the same using sapply()
+
+```{r}
+
+```
+
+
+>- Use a for loop to find the median value of rows 16:19
+
+```{r}
+
+```
+
+
+>- Make a for loop to find the standard deviation (hint sd() ) of CHOLESTEROLTOTAL, GLUCOSESI, CREATININESI, AND CREATININE
+
+CHOLESTEROLTOTAL        GLUCOSESI     CREATININESI 
+      38.6872845        1.6677120       26.5131524 
+      CREATININE 
+       0.2999403 
+
+```{r}
+
+```
+
+
+>- Bonus/Challenge Create a vector in which to put the standard deviations 
+
+```{r}
+
+```
+
+
+>- Use ifelse to create a new variable of high and normal A1C dichotomizing with 7 as a threshold for high levels
+
+```{r}
+
+```
+
+
+>- Subset to only have females (gender == "Female")
+
+```{r}
+
+```
+
+
+>- Create a subset of males and find the median total cholesterol level
+
+```{r}
+
+```
+
+
+>- Try to create a summary of the mean A1C using two factors, GENDER and DX_DBTS
+
+```{r}
+
+```
+
+Find the class of the first three columns of data. What are they?
+
+```{r}
+
+```
+
