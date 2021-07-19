@@ -153,3 +153,6 @@ Find the class of the first three columns of data. What are they?
 
 ```
 
+Please name the data set you will work with for your final and explain briefly why it interests you (note: you can change later this is meant to help "signpost" progress to the final). Also note what data file format it currently is an if there are issues to accessing it. If so, how will you meet these issues?:
+
+
