@@ -1,0 +1,92 @@
+---
+title: "Masters Homework 3"
+author: "Your Name Here"
+date: "7/29/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+nyc <- read.csv("https://raw.githubusercontent.com/fredlapolla/RVilcekMasters2021/main/NYC_HANES_DIAB.csv")
+```
+
+
+
+How does R treat blank values?
+
+What command can be used to identify where NAs are located in a column?
+
+```{r}
+
+```
+
+
+How can you use indexing to create a subset without any NAs?
+
+```{r}
+
+```
+
+How could you delete a column of data, for example, the 5th 
+```{r}
+
+```
+
+
+What command would let you find a set of text in the cells of a column?
+
+```{r}
+
+```
+
+
+Rename the HSQ1 variable to Health_Status
+
+```{r}
+
+```
+
+Use the Mutate command to create a ratio of total cholesterol divided by HDL
+
+```{r}
+
+```
+
+
+
+>- Why would one use a visualization for exploratory analysis?
+
+
+
+>- What information about the nature of our data can a histogram tell us?
+
+
+
+>- Make a histogram on your own on one column from the nyc data frame. Is it skewed? Which way? Try confirming with pastecs::stat.desc (hint set norm = TRUE as an argument).
+
+```{r}
+
+```
+
+>- Make a QQPlot to assess the normality of one variable of your choosing. Is the distribution normal? How can you tell?
+
+```{r}
+
+```
+
+>- Make a boxplot glucose levels by diabetes diagnosis:
+
+```{r}
+
+
+```
+
+>- Make a scatterplot of total cholesterol by LDL. Does there appear to be a relationship?
+
+```{r}
+
+```
+
