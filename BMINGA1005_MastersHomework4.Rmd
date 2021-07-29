@@ -1,0 +1,72 @@
+---
+title: "BMINGA1005 Vilcek Masters Homework 4"
+author: ""
+date: "8/5/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Preparations for Final Project:
+
+Outline your analysis plan. Identify challenges you expect to encounter in analyzing your chosen data set. 
+
+
+
+
+Pull in this data, https://raw.githubusercontent.com/fredlapolla/RVilcekMasters2021/main/elife-32032-fig2-data1_CSV.csv, which is from this paper:
+
+Piechura JR, Amarnath K, O'Shea EK. Natural changes in light interact with circadian regulation at promoters to control gene expression in cyanobacteria. Elife. 2017 Dec 14;6:e32032. doi: 10.7554/eLife.32032. PMID: 29239721; PMCID: PMC5785211.
+
+Make a heatmap of the pearson's R correlation of genes that are expressed such that the rowSums are greater than 100. 
+
+```{r}
+
+```
+
+
+
+
+```{r}
+nyc <- read.csv("https://raw.githubusercontent.com/fredlapolla/RVilcekMasters2021/main/NYC_HANES_DIAB.csv")
+```
+
+
+>- Using GGplot, make a boxplot of A1C by diabetes diagnosis. Would you assume the three groups have the same A1C level? 
+
+```{r}
+
+```
+
+
+>- Use ggplot2 to make a scatter plot of A1C by glucose levels.
+
+```{r}
+
+```
+
+
+>- Add coloration by gender for the above scatter plot and change the background theme to the minimal option. Change the X axis to label numbers by increments of 3. 
+
+```{r}
+
+```
+
+>- Create a GGPlot chart of Lead vs. Cotinine and show two different themes for the background. 
+
+```{r}
+
+```
+
+>- Make bar charts of mean Glucose level by diabetes diagnosis. Add error bars.
+
+```{r}
+
+```
+
+
+>- Where could you go to look up other Geom shapes for different types of charts?
+
+
