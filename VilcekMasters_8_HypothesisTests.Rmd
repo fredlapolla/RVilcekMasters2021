@@ -26,7 +26,10 @@ nyc$GENDER <- factor(nyc$GENDER, levels = 1:2, labels = c("male", "female"))
   nyc$HSQ_1 <- factor(nyc$HSQ_1, levels = 1:5, labels=c("Excellent","Very Good","Good", "Fair", "Poor"))
   # Rename the DX_DBTS as a factor
   nyc$DX_DBTS <- factor(nyc$DX_DBTS,levels = 1:3, labels=c("Diabetes with DX","Diabetes with no DX","No Diabetes"))
-  
+  #Diabetes dichotomy
+  nyc$DBT_dichotomy <- ifelse(nyc$DX_DBTS == "No Diabetes", "NoDX", "DX")
+  #hsq dichotomy
+  nyc$HSQ_Dichotomy <- ifelse(nyc$HSQ_1 == "Excellent" | nyc$HSQ_1 == "Very Good", "VGood", "NotVGood")
 
 
 ```
@@ -57,29 +60,59 @@ If you have a very small p in r, you get a value like "p-value < 2.2e-16" but fo
 
 Used for assessing if the proportions of of nominal (factor) variables are what we would expect if the groups were equal of not.
 
-Chi square assumes > 5 observations per cell. Null hypothesis is that rows and columns are independent. 
+Chi square assumes > 5 observations per cell. Null hypothesis is that rows and columns are independent. It is easier to interpret a 2x2 square:
 
 ```{r}
-chisq.test(nyc$AGEGROUP, nyc$DX_DBTS)
+chisq.test(nyc$HSQ_Dichotomy, nyc$DBT_dichotomy)
 ```
 
-We can get the effect size by taking the square root of (X^2/n*degrees of freedom), which is called Cranmer's V. 
+ 
+
+
+***
+
+## Odds Ratio 
+
+The most common effect measurement is the odds ratio, which would be dividing the group that has some exposure by those that did not. This would mean for a 2x2 table:
+
+Number of having a Excellent or Very Good health with diabetes/Number of Excellent or Very Good Health health without diabetes
+
+Divided by
+
+Number of Not very good health with Diabetes/Number of Not very good health without diabetes 
+
+|a | b |
+|c | d |
+
+(a/b)/(c/d)
+
+Odds of 1 mean no difference, 0:.9999999 means the odds are lower in a group and 1.000000001: infinity mean the odds are higher
+
+Conveniently there is a package called "epitools" that can calculate an oddsratio:
+
+```{r}
+#install.packages("epitools")
+library(epitools)
+oddsratio(nyc$HSQ_Dichotomy, nyc$DBT_dichotomy)
+```
 
 
 ***
 
 ## Adding contingency tables
 
+
 Typically we will also want to see the actual tables. Creating a table will show us the total nubers, prop.table will tell us the percentage by either row (setting the margin to 1) or column (setting the margin to 2)
 
 ```{r}
-AgeDxTable <- table(nyc$AGEGROUP, nyc$DX_DBTS)
-AgeDxTable
+HSQDxTable <- table(nyc$HSQ_Dichotomy, nyc$DBT_dichotomy)
+HSQDxTable
  # Proportions of Age by DX per row
- prop.table(AgeDxTable, 1)
+ prop.table(HSQDxTable, 1)
  # Proportions of Age by DX per column
- prop.table(AgeDxTable, 2)
-chisq.test(nyc$AGEGROUP, nyc$DX_DBTS)
+ prop.table(HSQDxTable, 2)
+chisq.test(nyc$HSQ_Dichotomy, nyc$DBT_dichotomy)
+oddsratio(HSQDxTable)
 ```
 
 ## Contingency test with small values
@@ -93,7 +126,7 @@ fisher.test()
 
 ## On your own
 
-Make a contingency table of HSQ1 vs a dichotomized Has or does not have diabetes. Run a chi square test and look up the Cranmer's V (square-root of X square divided by n * df). We can then look up online a table to see if this is a small, moderate or large effect. 
+Make a contingency table of HSQ1 vs a dichotomized Has or does not have diabetes. Run a chi square test and calculate the Odds Ratio. 
 
 ```{r}
 
@@ -276,26 +309,6 @@ Run a correlation of lead to to total mercury. Which test will you choose and wh
 
 ```
 
-
-***
-
-## Analysis of Variance ANOVA
-
-A test that assumes normal distribution for assessing difference in means when you have multiple groups. There are multiple ways to do this, and one is to run aov() which does a linear regression on the back end. The result of this then should be summarized or run through ANOVA. 
-
-```{r}
-CholDiabAnova <- aov(nyc$CHOLESTEROLTOTAL ~  nyc$DX_DBTS)
-summary(CholDiabAnova)
-anova(CholDiabAnova)
-
-```
-
-We often may want to adjust the p value if we have multiple p values. We can use p.adjust and set the method, for example "bonferroni" and "fdr"
-
-```{r}
-p.adjust(.418, method="bonferroni", 3)
-p.adjust(.418, method = "fdr", 3)
-```
 
 ***
 
